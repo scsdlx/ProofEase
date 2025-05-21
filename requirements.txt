@@ -1,0 +1,7 @@
+Flask
+mysql-connector-python
+requests
+pywin32
+Pillow
+openpyxl
+pandas
