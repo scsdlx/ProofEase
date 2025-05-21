@@ -1,0 +1,76 @@
+编写一个python代码，使用win32com，完成以下功能：
+
+1. 从“word_content_analysis.xlsx”中“element_type”为“paragraph”的第一条数据（“text_content”列）开始；
+2. 使用“get_alignment_details”，计算其与“document_contents.xlsx”表中“element_type”为“paragraph”的每列数据（“text_content”列）的相似性；找到内容最相似的记录（要求相似度最低为0.75），记录下它的“content_id”；根据它去“document_content_chunks.xlsx”表，查询“ai_content”列（是一个JSON数组）中，所有"材料id"为“content_id”的JSON表达式，作为审校建议，生成针对原始材料的审校建议清单，写入word中；
+3. 再继续处理下一条，直到“word_content_analysis.xlsx”所有记录处理完毕，保存word文档。
+
+针对每条审校建议，其格式为：
+页码（word_content_analysis.xlsx表中的“pageNo”）：
+原始内容（对应document_contents.xlsx的“text_content”）：
+针对原始内容，要求：
+1. 根据“建议修改内容”，在原始内容中找到这些文字，并将其变成红色文字并加上删除线（表示建议删除）；
+2. 将“建议修改”变成浅绿色背景、深绿色文字（表示建议改成这个样子），放在原始内容中“建议修改内容”后面；
+3. 将当前状态放在“建议修改”后面的“【】”中，以方便告知当前的修改状态。原因放在下一段不变。
+4. 记录之间用一个横线分开
+
+其中：
+1. 建议修改内容为JSON中的“原始内容”）：
+2. 当前状态（JSON中的“status”，pending表示待修改，accepted已接受修改建议，denied表示已拒绝修改建议，accepted-edited表示已手动修改）：
+3. 建议修改（JSON中的“修改后内容”）：
+4. 原因（JSON中的“出错原因”）：
+
+
+请输出前确认代码符合要求。
+
+
+
+为方便理解，提供各个数据表及其示例数据如下。注意处理时要从excel表读数据，不要使用这些示例数据：
+
+word_content_analysis.xlsx:
+file_record_id	element_type	content_id	text_content	level	pageNo
+节选：创建有意识的机器 250422.docx	paragraph	1	1		1
+节选：创建有意识的机器 250422.docx	paragraph	2	第一章 意识是一种认知能力		1
+节选：创建有意识的机器 250422.docx	paragraph	3	荷马史诗中尤利西斯与海妖塞壬相遇的故事完美地概括了人类对 意识的理解，即意识是一种特定的认知能力。这一点可以在本文提及 的人类行为中观察得到。		1
+节选：创建有意识的机器 250422.docx	paragraph	4	002   /  创造有意识的机器（第二版）		2
+
+
+document_contents.xlsx:
+id	file_record_id	element_type	content_id	text_content	modified_content	sequence_order	level
+21123	ab7990c9-a53e-43ad-aa51-7b231b5af047	paragraph	p-0	1		0	
+21124	ab7990c9-a53e-43ad-aa51-7b231b5af047	paragraph	p-1	第一章意识是一种认知能力		1	
+21125	ab7990c9-a53e-43ad-aa51-7b231b5af047	paragraph	p-2	荷马史诗中尤利西斯与海妖塞壬相遇的故事完美地概括了人类对意识的理解，即意识是一种特定的认知能力。这一点可以在本文提及的人类行为中观察得到。		2	
+
+
+document_content_chunks.xlsx:
+id	file_record_id	chunk_index	created_at	updated_at	ai_content	status
+1000	ab7990c9-a53e-43ad-aa51-7b231b5af047	0	16/5/2025 22:28:11	16/5/2025 22:28:11	[{"材料id":"p-2","原始内容":"观察得到","出错类型编号":"1.2","出错原因":"重复字词、排版缺漏字符、转码乱码。","修改后内容":"观察到","判断依据":"根据GB/T 18358《中小学教科书编印规范》对于语言文字规范性的要求，此处“得到”属于冗余成分，“观察到”已能完整表达意思，应删去“得”。","clientId":"suggestion-client-0","status":"pending","isEditing":false,"editText":"观察到","finalContent":null,"editor":null,"actionType":null,"editTime":null},{"材料id":"p-5","原始内容":"MecaSapiens项目的目标是项目的目标是创建和设计文档","出错类型编号":"1.2","出错原因":"重复字词、排版缺漏字符、转码乱码。","修改后内容":"MecaSapiens项目的目标是创建和设计文档","判断依据":"根据GB/T 18358《中小学教科书编印规范》，应避免文字重复，此处“项目的目标是”重复出现。","clientId":"suggestion-client-1","status":"pending","isEditing":false,"editText":"MecaSapiens项目的目标是创建和设计文档","finalContent":null,"editor":null,"actionType":null,"editTime":null},{"材料id":"p-9","原始内容":"基于生式人工智能技术","出错类型编号":"1.2","出错原因":"重复字词、排版缺漏字符、转码乱码。","修改后内容":"基于生成式人工智能技术","判断依据":"根据上下文及通用术语，“生式人工智能”应为“生成式人工智能”，此处存在漏字错误，违反了GB/T 18358《中小学教科书编印规范》对文字准确性的要求。","clientId":"suggestion-client-2","status":"pending","isEditing":false,"editText":"基于生成式人工智能技术","finalContent":null,"editor":null,"actionType":null,"editTime":null},{"材料id":"p-10","原始内容":"目录。","出错类型编号":"3.1","出错原因":"句号、逗号、顿号等点号类型及层级使用错误。","修改后内容":"目录","判断依据":"根据GB/T 15834-2011《标点符号用法》4.1.3.3 c)，单独成行的标题（如“目录”）的末尾，通常不用标点符号，特别是当其后紧跟页码时。","clientId":"suggestion-client-3","status":"rejected","isEditing":false,"editText":"目录","finalContent":"目录。","editor":"默认用户","actionType":"rejected","editTime":"2025-05-16T14:35:51.301Z"},{"材料id":"p-15","原始内容":"意识被认为是有意识的系统的能力，可以在自身信息不断演变的基础上修改其行为命令的能力。","出错类型编号":"2.3","出错原因":"主语/谓语/宾语缺失或冗余。","修改后内容":"意识被认为是有意识的系统在自身信息不断演变的基础上修改其行为命令的能力。","判断依据":"根据《图书编校质量差错率计算办法》对行文简练的要求，原句中“能力”一词的表述存在冗余，修改后句式更通顺自然，避免了成分冗余。","clientId":"suggestion-client-4","status":"accepted-edited","isEditing":false,"editText":"意识被认为是有意识的系统，在自身信息不断演变的基础上修改其行为命令的能力。","finalContent":"意识被认为是有意识的系统，在自身信息不断演变的基础上修改其行为命令的能力。","editor":"默认用户","actionType":"accepted-edited","editTime":"2025-05-16T14:33:16.613Z"},{"材料id":"p-24","原始内容":"目录。","出错类型编号":"3.1","出错原因":"句号、逗号、顿号等点号类型及层级使用错误。","修改后内容":"目录","判断依据":"根据GB/T 15834-2011《标点符号用法》4.1.3.3 c)，单独成行的标题（如“目录”）的末尾，通常不用标点符号，特别是当其后紧跟页码时。","clientId":"suggestion-client-5","status":"rejected","isEditing":false,"editText":"目录","finalContent":"目录。","editor":"默认用户","actionType":"rejected","editTime":"2025-05-16T14:35:45.302Z"}]	Success
+
+
+
+# --- 新增的 LCS 和对齐函数 (保持不变) ---
+def _calculate_lcs_and_reconstruct(s1: str, s2: str) -> tuple[str, int]:
+    n = len(s1)
+    m = len(s2)
+    if n == 0 or m == 0: return "", 0
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            if s1[i-1] == s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1
+            else: dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    lcs_length = dp[n][m]
+    if lcs_length == 0: return "", 0
+    lcs_chars = []
+    i, j = n, m
+    while i > 0 and j > 0:
+        if s1[i-1] == s2[j-1]: lcs_chars.append(s1[i-1]); i -= 1; j -= 1
+        elif dp[i-1][j] > dp[i][j-1]: i -= 1
+        else: j -= 1
+    return "".join(reversed(lcs_chars)), lcs_length
+
+def get_alignment_details(s1: str, s2: str) -> tuple[str, int, float]:
+    common_sequence, common_length = _calculate_lcs_and_reconstruct(s1, s2)
+    len_s1 = len(s1); len_s2 = len(s2)
+    if len_s1 == 0 and len_s2 == 0: similarity_score = 1.0
+    elif common_length == 0 or (len_s1 + len_s2 == 0): similarity_score = 0.0
+    else: similarity_score = (2 * common_length) / (len_s1 + len_s2)
+    return common_sequence, common_length, similarity_score
