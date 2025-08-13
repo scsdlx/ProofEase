@@ -1,0 +1,63 @@
+{
+    "version": "7.4-profile",
+    "crop_width": "2020",
+    "crop_height": "3000",
+    "top_offset": "20",
+    "left_margin": "150",
+    "save_option": "specific",
+    "output_dir": "D:/\u5c0f\u5b66\u8bed\u6587\u6559\u5e08\u7528\u4e66/5\u4e0b",
+    "debug_mode": false,
+    "background_colors_v6_2": [
+        {
+            "color": [
+                254,
+                255,
+                255
+            ],
+            "tolerance": 24,
+            "enabled": true
+        },
+        {
+            "color": [
+                218,
+                233,
+                230
+            ],
+            "tolerance": 16,
+            "enabled": true
+        },
+        {
+            "color": [
+                252,
+                254,
+                251
+            ],
+            "tolerance": 15,
+            "enabled": true
+        },
+        {
+            "color": [
+                197,
+                204,
+                197
+            ],
+            "tolerance": 23,
+            "enabled": true
+        },
+        {
+            "color": [
+                235,
+                243,
+                232
+            ],
+            "tolerance": 13,
+            "enabled": true
+        }
+    ],
+    "expansion": "2",
+    "exclude_aspect_ratio": true,
+    "aspect_ratio_threshold": "10              ",
+    "clear_edges": true,
+    "edge_width": "20",
+    "min_area_ratio": "0.1"
+}
